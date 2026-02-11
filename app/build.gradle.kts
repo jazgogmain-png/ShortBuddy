@@ -74,4 +74,8 @@ dependencies {
     implementation("com.google.ai.client.generativeai:generativeai:0.1.2")
 
     testImplementation("junit:junit:4.13.2")
+
+    // Google Auth & Play Services (The 'Pro' Handshake)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.android.gms:play-services-base:18.2.0")
 }
