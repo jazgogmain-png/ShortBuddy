@@ -11,23 +11,31 @@ class GeminiChewer(private val keyVault: KeyVault) {
 
     suspend fun chewWithRetry(videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata? {
         val totalKeys = keyVault.getPoolSize()
-        SlopLogger.info("PHASE 1: AWAKENING THE GATEKEEPER. Pool: $totalKeys")
+        SlopLogger.info("CHEWER: G3 Mission Start. Keys: $totalKeys")
 
         for (i in 0 until totalKeys) {
             val currentKey = keyVault.getNextKey() ?: break
+            SlopLogger.keyRotation(i, currentKey)
+
             try {
-                return performChew(currentKey, videoBytes, template)
+                SlopLogger.info("CHEWER: Engaging G3 King Strategist...")
+                val result = performChew(currentKey, videoBytes, template)
+                SlopLogger.success("CHEWER: Viral strategy generated.")
+                return result
             } catch (e: Exception) {
-                SlopLogger.error("KEY FAIL: Rotating pool...", e)
+                SlopLogger.error("CHEWER: REJECTION: ${e.localizedMessage}")
             }
         }
         return null
     }
 
     private suspend fun performChew(apiKey: String, videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata = withContext(Dispatchers.IO) {
+
+        val options = RequestOptions(apiVersion = "v1beta")
         val model = GenerativeModel(
             modelName = "gemini-3-flash-preview",
             apiKey = apiKey,
+            requestOptions = options,
             safetySettings = listOf(
                 SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
                 SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
@@ -35,15 +43,15 @@ class GeminiChewer(private val keyVault: KeyVault) {
         )
 
         val masterPrompt = """
-            Act as a Senior Social Media Strategist for the '${template.channelName}' brand.
+            Act as a Viral YouTube Shorts Content Strategist for '${template.channelName}'.
+            Target Audience: Animal lovers (Baby Schema Trigger).
+            Goal: Maximize emotional attachment and loop replay.
             
-            BRAND VOICE: ${template.brandVoice}
-            TARGET AUDIENCE: ${template.targetAudience}
-            
-            Analyze this video and return strictly in English:
-            Title: [Classy Viral Title]
-            Description: [2-sentence hook] + [Appended: ${template.baseDescription}]
-            Tags: [${template.mandatoryTags.joinToString(", ")}, AI_Generated_Tag1, AI_Generated_Tag2]
+            Analyze this video and return:
+            1) Title: Viral-style caption (max 12 words).
+            2) Overlay: Scroll-stopping text (max 6 words, tier 1 engagement).
+            3) Tags: 3-5 hashtags including #shorts #viralshorts #aibaby and the animal niche.
+            4) Music: Suggested emotional style (e.g., Lofi, Ghibli Piano).
         """.trimIndent()
 
         val response = model.generateContent(
@@ -53,19 +61,20 @@ class GeminiChewer(private val keyVault: KeyVault) {
             }
         )
 
-        parseMetadata(response.text ?: "")
+        val rawText = response.text ?: ""
+        SlopLogger.info("CHEWER: G3 RAW OUTPUT: ${rawText.take(100)}...")
+        parseMetadata(rawText)
     }
 
-    // FIXED: Moved outside of performChew so it can be private
     private fun parseMetadata(rawText: String): ShortsMetadata {
         val lines = rawText.lines()
-        val title = lines.find { it.startsWith("Title:") }?.removePrefix("Title:")?.trim() ?: "Viral Clip"
-        val desc = lines.find { it.startsWith("Description:") }?.removePrefix("Description:")?.trim() ?: ""
-        val tags = lines.find { it.startsWith("Tags:") }?.removePrefix("Tags:")?.trim()?.split(",") ?: emptyList()
+        val title = lines.find { it.contains("Title:") }?.substringAfter("Title:")?.trim() ?: "Viral Clip"
+        val overlay = lines.find { it.contains("Overlay:") }?.substringAfter("Overlay:")?.trim() ?: ""
+        val tags = lines.find { it.contains("Tags:") }?.substringAfter("Tags:")?.trim()?.split(",") ?: emptyList()
 
         return ShortsMetadata(
             title = title,
-            description = desc,
+            description = overlay, // We use description field for Overlay Text for now
             tags = tags.map { it.trim() }
         )
     }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-// This now matches your exact lowercase filename 'engineroomactivity.xml'
 import com.shor.tbuddy.databinding.EngineroomactivityBinding
 
 class EngineRoomActivity : AppCompatActivity() {
@@ -14,30 +13,30 @@ class EngineRoomActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inflate using the specific name generated from engineroomactivity.xml
         binding = EngineroomactivityBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         keyVault = KeyVault(this)
 
-        // Load existing keys from storage
-        val prefs = getSharedPreferences("ShortBuddyKeys", Context.MODE_PRIVATE)
+        // Unified Preference File: "ShortBuddyPrefs"
+        val prefs = getSharedPreferences("ShortBuddyPrefs", Context.MODE_PRIVATE)
         val savedKeys = prefs.getString("raw_key_pool", "")
         binding.etKeyPool.setText(savedKeys)
 
-        // The "Engage" button logic
         binding.btnSaveKeys.setOnClickListener {
-            val rawKeys = binding.etKeyPool.text.toString()
+            val rawKeys = binding.etKeyPool.text.toString().trim()
             if (rawKeys.isNotEmpty()) {
-                // Save the text to the vault
+                // Save to the unified vault
                 prefs.edit().putString("raw_key_pool", rawKeys).apply()
 
-                // Update the active rolling pool
-                keyVault.updatePool(rawKeys)
+                // Force the KeyVault to re-read the storage
+                keyVault.updatePool()
 
-                Toast.makeText(this, "Pool Engaged: ${keyVault.getPoolSize()} keys ready.", Toast.LENGTH_LONG).show()
-                finish() // Close window and return to Mission Control
+                val poolSize = keyVault.getPoolSize()
+                SlopLogger.success("ENGINE_ROOM: Keys locked in. Pool Size: $poolSize")
+
+                Toast.makeText(this, "Pool Engaged: $poolSize keys ready.", Toast.LENGTH_LONG).show()
+                finish()
             } else {
                 Toast.makeText(this, "Paste keys first, Ninja!", Toast.LENGTH_SHORT).show()
             }

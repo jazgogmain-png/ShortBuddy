@@ -2,26 +2,24 @@ package com.shor.tbuddy
 
 import android.util.Log
 
-/**
- * Matrix Telemetry for ShortBuddy.
- * Use the 'lola_gemini' tag in Logcat to filter.
- */
 object SlopLogger {
     private const val TAG = "lola_gemini"
 
-    fun info(message: String) {
-        Log.i(TAG, "🟢 [INFO] $message")
+    fun info(msg: String) {
+        Log.e(TAG, "ℹ️ [LOLA_INFO] $msg")
     }
 
-    fun success(message: String) {
-        Log.d(TAG, "🐲 [GEMINI_READY] $message")
+    fun success(msg: String) {
+        Log.e(TAG, "✅ [LOLA_SUCCESS] $msg")
     }
 
-    fun error(message: String, throwable: Throwable? = null) {
-        Log.e(TAG, "🛑 [CRITICAL_FAIL] $message", throwable)
+    fun error(msg: String, e: Throwable? = null) {
+        Log.e(TAG, "🛑 [LOLA_ERROR] $msg")
+        e?.printStackTrace()
     }
 
-    fun keyRotation(keyIndex: Int, keySnippet: String) {
-        Log.w(TAG, "🌀 [KEY_ROTATION] Swapping to Key #$keyIndex (...${keySnippet.takeLast(4)})")
+    fun keyRotation(index: Int, key: String) {
+        val masked = if (key.length > 10) key.take(4) + "..." + key.takeLast(4) else "****"
+        Log.e(TAG, "🔑 [LOLA_KEY] Slot #$index Active ($masked)")
     }
 }
