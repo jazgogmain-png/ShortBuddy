@@ -21,6 +21,7 @@ import com.shor.tbuddy.databinding.ActivityMainBinding
 import com.shor.tbuddy.models.ShortsProject
 import com.shor.tbuddy.ui.SettingsActivity
 import com.shor.tbuddy.ui.EngineRoomActivity
+import com.shor.tbuddy.ui.PerformanceActivity
 import com.shor.tbuddy.ui.KeyVault
 import kotlinx.coroutines.launch
 import java.io.InputStream
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chewer: GeminiChewer
     private var currentProject: ShortsProject? = null
     private var player: ExoPlayer? = null
+    private var isMuted = false // Track mute state
 
     // Reference to inflated tab views
     private var etTabCaption: EditText? = null
@@ -45,6 +47,9 @@ class MainActivity : AppCompatActivity() {
             updateNerdWindow("PHASE_1: SOURCE_STAGED")
             binding.btnNewProject.text = "[ READY ]\nLAUNCH ANALYSIS"
             binding.btnNewProject.setOnClickListener { startAnalysisFlow() }
+
+            // Auto-prepare player so user can see what they picked
+            setupPlayer(binding.analyzePlayerView, uri)
         }
     }
 
@@ -75,6 +80,13 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "SWOOSH! TRANSMISSION_SUCCESSFUL 🚀", Toast.LENGTH_SHORT).show()
             moveToStep(0) // Back to Dashboard
         }
+
+        // Mute Toggle Logic (Make sure to add this ID to your XML)
+        binding.btnMuteToggle?.setOnClickListener {
+            isMuted = !isMuted
+            player?.volume = if (isMuted) 0f else 1f
+            binding.btnMuteToggle?.text = if (isMuted) "[ UNMUTE ]" else "[ MUTE ]"
+        }
     }
 
     private fun setupNavigation() {
@@ -83,6 +95,11 @@ class MainActivity : AppCompatActivity() {
                 R.id.lane_engine -> {
                     updateNerdWindow("NAV_EVENT: ENTERING_ENGINE_ROOM")
                     startActivity(Intent(this, EngineRoomActivity::class.java))
+                    true
+                }
+                R.id.lane_analytics -> {
+                    updateNerdWindow("NAV_EVENT: VIEWING_STATS")
+                    startActivity(Intent(this, PerformanceActivity::class.java))
                     true
                 }
                 R.id.lane_overview -> {
@@ -130,22 +147,20 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "PROMPT_COPIED", Toast.LENGTH_SHORT).show()
         }
 
-        // Modified: Move to Review then to Publish
         tabView.findViewById<View>(R.id.btnNextToReview).setOnClickListener {
             syncToReviewScreen()
-            moveToStep(4) // Move to REVIEW & EDIT
+            moveToStep(4)
         }
 
-        // Final bridge to Publish
         binding.btnProceedToPublish.setOnClickListener {
-            moveToStep(5) // Move to PUBLISH SCREEN
+            moveToStep(5)
             updateNerdWindow("PHASE_5: READY_FOR_CLOUD_PUSH")
         }
     }
 
     private fun startAnalysisFlow() {
         val uri = currentProject?.rawVideoUri ?: return
-        moveToStep(2) // Move to ANALYZE SCREEN
+        moveToStep(2)
         updateNerdWindow("PHASE_2: AI_ANALYSIS_ACTIVE")
         setupPlayer(binding.analyzePlayerView, uri)
 
@@ -169,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 tvMusicSuggestion?.text = "🎵 Suggested: ${result["music"]}"
 
                 updateNerdWindow("PHASE_3: GENERATION_COMPLETE")
-                moveToStep(3) // Move to GENERATE SCREEN
+                moveToStep(3)
             } else {
                 updateNerdWindow("ERROR: NEURAL_STRIKE_FAILED")
                 moveToStep(0)
@@ -190,8 +205,23 @@ class MainActivity : AppCompatActivity() {
             view.player = this
             setMediaItem(MediaItem.fromUri(uri))
             repeatMode = Player.REPEAT_MODE_ALL
+            volume = if (isMuted) 0f else 1f
             prepare()
             play()
+        }
+    }
+
+    // 🛑 CRITICAL LIFECYCLE FIXES: Stops audio when app is minimized or switches screens
+    override fun onPause() {
+        super.onPause()
+        player?.pause()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Only resume if we are currently in a step that has a video visible
+        if (binding.workflowFlipper.displayedChild in 2..4) {
+            player?.play()
         }
     }
 

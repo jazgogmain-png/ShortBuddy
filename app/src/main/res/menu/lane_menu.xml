@@ -12,7 +12,7 @@
         android:title="Engine Room" />
 
     <item
-        android:id="@+id/lane_cuteness"
+        android:id="@+id/lane_analytics"
         android:icon="@drawable/ic_pets"
         android:title="Cuteness Lane" />
 

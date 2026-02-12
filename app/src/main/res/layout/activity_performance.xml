@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#050505"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="[ PERFORMANCE_METRICS ]"
+        android:textColor="#00FF41"
+        android:fontFamily="monospace"
+        android:textSize="14sp"
+        android:layout_marginBottom="20dp"/>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="#0F0F0F"
+        app:cardCornerRadius="8dp"
+        android:layout_marginBottom="20dp">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AI_AUDIENCE_INSIGHTS"
+                android:textColor="#00FF41"
+                android:textSize="10sp"
+                android:fontFamily="monospace"/>
+
+            <TextView
+                android:id="@+id/tvAiInsights"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:layout_marginTop="8dp"
+                android:text="• SCANNIG_HISTORICAL_DATA..." />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TOP_PERFORMING_UPLOADS"
+        android:textColor="#444444"
+        android:textSize="10sp"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="8dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTopPerformance"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnClosePerformance"
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:text="RETURN_TO_COMMAND"
+        android:backgroundTint="#121212"
+        android:textColor="#00FF41"
+        android:layout_marginTop="12dp"
+        android:fontFamily="monospace"
+        android:textStyle="bold"/>
+
+</LinearLayout>
