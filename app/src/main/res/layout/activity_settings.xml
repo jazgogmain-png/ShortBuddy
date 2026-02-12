@@ -1,114 +1,132 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0A0A"
-    android:orientation="vertical"
-    android:padding="20dp">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ENGINE ROOM: TEMPLATES"
-        android:textColor="#00FF41"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:fontFamily="monospace"/>
-
-    <View
-        android:layout_width="60dp"
-        android:layout_height="2dp"
-        android:background="#00FF41"
-        android:layout_marginTop="4dp"/>
-
-    Full Ninja) -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="AUTOMATION LEVEL"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:textStyle="bold" />
-
-    <com.google.android.material.slider.Slider
-        android:id="@+id/sliderAutomation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:valueFrom="0.0"
-        android:valueTo="100.0"
-        app:thumbColor="#00FF41"
-        app:trackColorActive="#00FF41"
-        app:trackColorInactive="#333333" />
+    android:background="#0A0A0A">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Manual" android:textColor="#888888" android:textSize="10sp" />
-        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Full Ninja" android:textColor="#888888" android:textSize="10sp" />
-    </LinearLayout>
+        android:orientation="vertical"
+        android:padding="20dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="G3 MASTER SYSTEM PROMPT"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ENGINE ROOM: TEMPLATES"
+            android:textColor="#00FF41"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace"/>
 
-    <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="8dp"
-        app:cardBackgroundColor="#1A1A1A"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="0dp">
+        <View
+            android:layout_width="60dp"
+            android:layout_height="2dp"
+            android:background="#00FF41"
+            android:layout_marginTop="4dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="AUTOMATION LEVEL"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderAutomation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:valueFrom="0.0"
+            android:valueTo="100.0"
+            app:thumbColor="#00FF41"
+            app:trackColorActive="#00FF41"
+            app:trackColorInactive="#333333" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="VEO PROMPT FACTORY (QUOTA-FREE)"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:scrollbars="none">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button android:id="@+id/btnGenKitten" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🐱 KITTEN" android:backgroundTint="#1A1A1A" android:textColor="#00FF41" android:layout_marginEnd="8dp" android:textSize="10sp" />
+                <Button android:id="@+id/btnGenPuppy" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🐶 PUPPY" android:backgroundTint="#1A1A1A" android:textColor="#00FF41" android:layout_marginEnd="8dp" android:textSize="10sp" />
+                <Button android:id="@+id/btnGenFox" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🦊 FOX" android:backgroundTint="#1A1A1A" android:textColor="#00FF41" android:layout_marginEnd="8dp" android:textSize="10sp" />
+                <Button android:id="@+id/btnGenBunny" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🐰 BUNNY" android:backgroundTint="#1A1A1A" android:textColor="#00FF41" android:layout_marginEnd="8dp" android:textSize="10sp" />
+                <Button android:id="@+id/btnGenCustom" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✨ CUSTOM" android:backgroundTint="#00FF41" android:textColor="#000000" android:textSize="10sp" android:textStyle="bold" />
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="G3 ANALYSIS SYSTEM INSTRUCTIONS"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="#1A1A1A"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="0dp">
+            <EditText
+                android:id="@+id/etMasterPrompt"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:gravity="top"
+                android:padding="12dp"
+                android:textColor="#BBBBBB"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                android:hint="Paste instructions for G3 video analysis here..." />
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="STATIC TAG STACK"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
         <EditText
-            android:id="@+id/etMasterPrompt"
+            android:id="@+id/etStaticTags"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@null"
-            android:gravity="top"
-            android:padding="12dp"
-            android:textColor="#BBBBBB"
-            android:textSize="13sp"
-            android:fontFamily="monospace"
-            android:hint="Paste your G3 Master System Instructions here..."
-            android:textColorHint="#444444"/>
-    </androidx.cardview.widget.CardView>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#333333"
+            android:textColor="#00FF41"
+            android:textSize="14sp" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="STATIC TAG STACK (Always Included)"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        <Button
+            android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#00FF41"
+            android:text="ENGAGE ENGINE"
+            android:textColor="#000000"
+            android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/etStaticTags"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:backgroundTint="#333333"
-        android:hint="#shorts #viralshorts #aibaby"
-        android:textColor="#00FF41"
-        android:textSize="14sp" />
-
-    <Button
-        android:id="@+id/btnSaveSettings"
-        android:layout_width="match_parent"
-        android:layout_height="64dp"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="#00FF41"
-        android:text="ENGAGE ENGINE"
-        android:textColor="#000000"
-        android:textStyle="bold" />
-
-</LinearLayout>
+    </LinearLayout>
+</ScrollView>

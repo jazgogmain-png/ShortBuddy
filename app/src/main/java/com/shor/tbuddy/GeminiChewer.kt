@@ -10,72 +10,69 @@ import kotlinx.coroutines.withContext
 class GeminiChewer(private val keyVault: KeyVault) {
 
     suspend fun chewWithRetry(videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata? {
-        val totalKeys = keyVault.getPoolSize()
-        SlopLogger.info("CHEWER: G3 Mission Start. Keys: $totalKeys")
+        val currentKey = keyVault.getNextKey() ?: return null
 
-        for (i in 0 until totalKeys) {
-            val currentKey = keyVault.getNextKey() ?: break
-            SlopLogger.keyRotation(i, currentKey)
-
-            try {
-                SlopLogger.info("CHEWER: Engaging G3 King Strategist...")
-                val result = performChew(currentKey, videoBytes, template)
-                SlopLogger.success("CHEWER: Viral strategy generated.")
-                return result
-            } catch (e: Exception) {
-                SlopLogger.error("CHEWER: REJECTION: ${e.localizedMessage}")
-            }
+        return try {
+            performChew(currentKey, videoBytes, template)
+        } catch (e: Exception) {
+            SlopLogger.error("CHEWER: Strike Failed: ${e.localizedMessage}")
+            null
         }
-        return null
     }
 
     private suspend fun performChew(apiKey: String, videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata = withContext(Dispatchers.IO) {
 
-        val options = RequestOptions(apiVersion = "v1beta")
         val model = GenerativeModel(
-            modelName = "gemini-3-flash-preview",
+            modelName = "gemini-3-flash-preview", // Kept your specific model
             apiKey = apiKey,
-            requestOptions = options,
-            safetySettings = listOf(
-                SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
-                SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE)
-            )
+            requestOptions = RequestOptions(apiVersion = "v1beta") // Kept your v1beta requirement
         )
 
-        val masterPrompt = """
-            Act as a Viral YouTube Shorts Content Strategist for '${template.channelName}'.
-            Target Audience: Animal lovers (Baby Schema Trigger).
-            Goal: Maximize emotional attachment and loop replay.
+        val ninjaPrompt = """
+            You are the Master Creative Director for a Viral AI Animal Channel. 
+            Analyze the video and return ONLY these labels with no markdown, no asterisks, and no extra text:
             
-            Analyze this video and return:
-            1) Title: Viral-style caption (max 12 words).
-            2) Overlay: Scroll-stopping text (max 6 words, tier 1 engagement).
-            3) Tags: 3-5 hashtags including #shorts #viralshorts #aibaby and the animal niche.
-            4) Music: Suggested emotional style (e.g., Lofi, Ghibli Piano).
+            STYLE_MELT: [Emotional caption]
+            STYLE_ADOPT: [Adoption question]
+            STYLE_COZY: [Peaceful caption]
+            OVERLAY: [5 word max overlay text]
+            VEO_PROMPT: [Detailed 9:16 prompt]
+            VIRAL_TAGS: [tag1, tag2, tag3]
         """.trimIndent()
 
         val response = model.generateContent(
             content {
                 blob("video/mp4", videoBytes)
-                text(masterPrompt)
+                text(ninjaPrompt)
             }
         )
 
         val rawText = response.text ?: ""
-        SlopLogger.info("CHEWER: G3 RAW OUTPUT: ${rawText.take(100)}...")
-        parseMetadata(rawText)
+        parseNinjaMetadata(rawText)
     }
 
-    private fun parseMetadata(rawText: String): ShortsMetadata {
-        val lines = rawText.lines()
-        val title = lines.find { it.contains("Title:") }?.substringAfter("Title:")?.trim() ?: "Viral Clip"
-        val overlay = lines.find { it.contains("Overlay:") }?.substringAfter("Overlay:")?.trim() ?: ""
-        val tags = lines.find { it.contains("Tags:") }?.substringAfter("Tags:")?.trim()?.split(",") ?: emptyList()
+    private fun parseNinjaMetadata(rawText: String): ShortsMetadata {
+        // Clean up markdown before parsing (Removes ** and ##)
+        val cleanText = rawText.replace("**", "").replace("##", "")
+        val lines = cleanText.lines()
+
+        fun extract(key: String) = lines.find { it.contains(key, ignoreCase = true) }
+            ?.substringAfter(":")?.trim() ?: ""
+
+        val title = extract("STYLE_MELT")
+        val adopt = extract("STYLE_ADOPT")
+        val cozy = extract("STYLE_COZY")
+        val overlay = extract("OVERLAY")
+        val veo = extract("VEO_PROMPT")
+        val tags = extract("VIRAL_TAGS").split(",").map { it.trim() }
+
+        // Stashing all styles in the description so MainActivity can split them later
+        val combinedDesc = "OVERLAY: $overlay | ADOPT: $adopt | COZY: $cozy | VEO: $veo"
 
         return ShortsMetadata(
-            title = title,
-            description = overlay, // We use description field for Overlay Text for now
-            tags = tags.map { it.trim() }
+            title = if (title.isEmpty()) "Cute Baby" else title,
+            description = combinedDesc,
+            tags = tags
         )
     }
 }

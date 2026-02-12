@@ -1,47 +1,43 @@
-package com.shor.tbuddy
+package com.shor.tbuddy.ui
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.shor.tbuddy.databinding.ActivitySettingsBinding
+import com.shor.tbuddy.databinding.ActivitySettingsKeysBinding
 
 class SettingsActivity : AppCompatActivity() {
-    private lateinit var binding: ActivitySettingsBinding
+    private lateinit var binding: ActivitySettingsKeysBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivitySettingsBinding.inflate(layoutInflater)
+        binding = ActivitySettingsKeysBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Use the same Prefs file as the rest of the app
+        // Using the central SharedPreferences for the Ninja stack
         val prefs = getSharedPreferences("ShortBuddyPrefs", Context.MODE_PRIVATE)
 
-        // 1. LOAD EXISTING DATA
-        val savedPrompt = prefs.getString("master_system_prompt", "")
-        val savedTags = prefs.getString("static_tags", "#shorts #viralshorts #aibaby")
-        val savedAutoLevel = prefs.getFloat("automation_level", 0f)
+        // 1. Load existing key if it exists
+        binding.etApiKey.setText(prefs.getString("gemini_api_key", ""))
 
-        binding.etMasterPrompt.setText(savedPrompt)
-        binding.etStaticTags.setText(savedTags)
-        binding.sliderAutomation.value = savedAutoLevel
+        // 2. Navigation to the Engine Room (The Factory)
+        binding.btnOpenEngine.setOnClickListener {
+            val intent = Intent(this, EngineRoomActivity::class.java)
+            startActivity(intent)
+        }
 
-        // 2. THE SAVE LOGIC
-        binding.btnSaveSettings.setOnClickListener {
-            val newPrompt = binding.etMasterPrompt.text.toString()
-            val newTags = binding.etStaticTags.setText(savedTags).toString() // Just ensuring it's a string
-            val newLevel = binding.sliderAutomation.value
+        // 3. Save Logic for the Vault
+        binding.btnSaveKeys.setOnClickListener {
+            val key = binding.etApiKey.text.toString()
 
-            prefs.edit().apply {
-                putString("master_system_prompt", newPrompt)
-                putString("static_tags", binding.etStaticTags.text.toString())
-                putFloat("automation_level", newLevel)
-                apply()
+            if (key.isNotEmpty()) {
+                prefs.edit().putString("gemini_api_key", key).apply()
+                Toast.makeText(this, "Vault Locked 🔐", Toast.LENGTH_SHORT).show()
+                finish() // Head back to the main cockpit
+            } else {
+                Toast.makeText(this, "Key Required for G3 Engine", Toast.LENGTH_SHORT).show()
             }
-
-            SlopLogger.success("ENGINE: Viral DNA Locked. Auto-Level: $newLevel%")
-
-            // Go back to the main cockpit
-            finish()
         }
     }
 }

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0A0A0A"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SETTINGS &amp; VAULT"
+        android:textColor="#00FF41"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="GEMINI API KEY"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <EditText
+        android:id="@+id/etApiKey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#333333"
+        android:hint="Paste G3 Key Here..."
+        android:inputType="textPassword"
+        android:textColor="#00FF41" />
+
+    <Button
+        android:id="@+id/btnOpenEngine"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginTop="40dp"
+        android:backgroundTint="#1A1A1A"
+        android:text="🔧 OPEN ENGINE ROOM"
+        android:textColor="#00FF41" />
+
+    <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/btnSaveKeys"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:backgroundTint="#00FF41"
+        android:text="SAVE &amp; LOCK"
+        android:textColor="#000000"
+        android:textStyle="bold" />
+</LinearLayout>
