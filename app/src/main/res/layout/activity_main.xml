@@ -85,16 +85,49 @@
             android:layout_weight="1">
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
-                <Button android:id="@+id/btnNewProject" android:layout_width="match_parent" android:layout_height="80dp"
-                    android:text="[ + ] NEW PROJECT" android:backgroundTint="#121212" android:textColor="#00FF41" android:fontFamily="monospace" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button android:id="@+id/btnNewProject"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="2"
+                        android:text="[ + ] NEW PROJECT"
+                        android:backgroundTint="#121212"
+                        android:textColor="#00FF41"
+                        android:fontFamily="monospace" />
+
+                    <Button android:id="@+id/btnResetManual"
+                        android:layout_width="0dp"
+                        android:layout_height="80dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="[ RESET ]"
+                        android:backgroundTint="#1A1111"
+                        android:textColor="#FF4444"
+                        android:fontFamily="monospace" />
+                </LinearLayout>
+
                 <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvRecentProjects" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginTop="12dp" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" />
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
-                <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="250dp" app:cardBackgroundColor="#000000">
-                    <androidx.media3.ui.PlayerView android:id="@+id/analyzePlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:use_controller="false" />
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="450dp"
+                    app:cardBackgroundColor="#000000"
+                    app:cardElevation="0dp">
+                    <androidx.media3.ui.PlayerView
+                        android:id="@+id/analyzePlayerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:use_controller="false"
+                        app:resize_mode="zoom" />
                 </androidx.cardview.widget.CardView>
                 <TextView android:id="@+id/tvAnalyzePanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#00FF41" android:padding="12dp" android:fontFamily="monospace" android:text="SCANNING..." />
             </LinearLayout>
@@ -107,8 +140,16 @@
 
             <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                    <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="300dp" app:cardBackgroundColor="#000000">
-                        <androidx.media3.ui.PlayerView android:id="@+id/reviewPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:use_controller="false" />
+                    <androidx.cardview.widget.CardView
+                        android:layout_width="match_parent"
+                        android:layout_height="500dp"
+                        app:cardBackgroundColor="#000000">
+                        <androidx.media3.ui.PlayerView
+                            android:id="@+id/reviewPlayerView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:use_controller="false"
+                            app:resize_mode="zoom" />
                     </androidx.cardview.widget.CardView>
                     <EditText android:id="@+id/etFinalCaption" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Final Caption" android:textColor="#FFFFFF" android:layout_marginTop="12dp" android:backgroundTint="#333333" />
                     <EditText android:id="@+id/etFinalTags" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Final Hashtags" android:textColor="#00FF41" android:layout_marginTop="8dp" android:backgroundTint="#333333" />
@@ -116,8 +157,76 @@
                 </LinearLayout>
             </ScrollView>
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_horizontal">
-                <Button android:id="@+id/btnSwoosh" android:layout_width="match_parent" android:layout_height="60dp" android:text="POST_NOW" android:backgroundTint="#00FF41" android:textColor="#000000" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#0F0F0F"
+                    app:cardCornerRadius="8dp"
+                    android:layout_marginBottom="16dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                                android:text="AI_VEO_STRATEGY" android:textColor="#444444" android:textSize="10sp" android:fontFamily="monospace"/>
+
+                            <Button android:id="@+id/btnScanAnalytics"
+                                android:layout_width="wrap_content" android:layout_height="28dp"
+                                android:layout_alignParentEnd="true"
+                                android:text="[ SCAN ANALYTICS ]" android:textSize="8sp"
+                                android:backgroundTint="#1A1A1A" android:textColor="#00FF41"
+                                android:padding="0dp" android:fontFamily="monospace"/>
+                        </RelativeLayout>
+
+                        <TextView android:id="@+id/tvBestTime"
+                            android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="Best time today: 08:00 🟢"
+                            android:textColor="#00FF41"
+                            android:textSize="16sp"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="monospace"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:text="SELECT_SCHEDULE_SLOT" android:textColor="#444444" android:textSize="10sp" android:fontFamily="monospace" android:layout_marginBottom="8dp"/>
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2"
+                    android:layout_marginBottom="24dp">
+
+                    <Button android:id="@+id/btnSlot1" android:layout_width="0dp" android:layout_height="50dp" android:layout_columnWeight="1" android:layout_margin="4dp"
+                        android:text="08:00" android:backgroundTint="#121212" android:textColor="#FFFFFF" android:textSize="12sp" android:fontFamily="monospace"/>
+                    <Button android:id="@+id/btnSlot2" android:layout_width="0dp" android:layout_height="50dp" android:layout_columnWeight="1" android:layout_margin="4dp"
+                        android:text="11:00" android:backgroundTint="#121212" android:textColor="#FFFFFF" android:textSize="12sp" android:fontFamily="monospace"/>
+                    <Button android:id="@+id/btnSlot3" android:layout_width="0dp" android:layout_height="50dp" android:layout_columnWeight="1" android:layout_margin="4dp"
+                        android:text="16:00" android:backgroundTint="#121212" android:textColor="#FFFFFF" android:textSize="12sp" android:fontFamily="monospace"/>
+                    <Button android:id="@+id/btnSlot4" android:layout_width="0dp" android:layout_height="50dp" android:layout_columnWeight="1" android:layout_margin="4dp"
+                        android:text="18:00" android:backgroundTint="#121212" android:textColor="#FFFFFF" android:textSize="12sp" android:fontFamily="monospace"/>
+                </GridLayout>
+
+                <View android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"/>
+
+                <Button
+                    android:id="@+id/btnSwoosh"
+                    android:layout_width="match_parent"
+                    android:layout_height="70dp"
+                    android:text="SWOOSH: POST NOW"
+                    android:backgroundTint="#00FF41" android:textColor="#000000"
+                    android:textStyle="bold" android:fontFamily="monospace" />
+
             </LinearLayout>
 
         </ViewFlipper>

@@ -1,6 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    // 1. ADD THE KSP PLUGIN HERE
+    id("com.google.devtools.ksp") version "1.9.22-1.0.17"
 }
 
 android {
@@ -58,9 +60,15 @@ dependencies {
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
-    // Coroutines & Lifecycle (Crucial for the G3 Chewer)
+    // Coroutines & Lifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // 2. ADD ROOM DEPENDENCIES HERE
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
 
     // YouTube API
     implementation("com.google.apis:google-api-services-youtube:v3-rev20251217-2.0.0") {
@@ -70,10 +78,10 @@ dependencies {
     implementation("com.google.api-client:google-api-client-android:2.2.0")
     implementation("com.google.http-client:google-http-client-gson:1.43.3")
 
-    // THE FULL MEDIA3 STACK (The Squeezer + The Simulator)
+    // THE FULL MEDIA3 STACK
     val media3Version = "1.2.1"
     implementation("androidx.media3:media3-transformer:$media3Version")
-    implementation("androidx.media3:media3-exoplayer:$media3Version") // THE MISSING PIECE
+    implementation("androidx.media3:media3-exoplayer:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
     implementation("androidx.media3:media3-common:$media3Version")
 

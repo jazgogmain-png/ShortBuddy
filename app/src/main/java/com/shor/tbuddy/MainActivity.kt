@@ -7,6 +7,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -31,9 +32,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chewer: GeminiChewer
     private var currentProject: ShortsProject? = null
     private var player: ExoPlayer? = null
-    private var isMuted = false // Track mute state
+    private var isMuted = false
 
-    // Reference to inflated tab views
     private var etTabCaption: EditText? = null
     private var etTabOverlay: EditText? = null
     private var etTabHashtags: EditText? = null
@@ -47,9 +47,13 @@ class MainActivity : AppCompatActivity() {
             updateNerdWindow("PHASE_1: SOURCE_STAGED")
             binding.btnNewProject.text = "[ READY ]\nLAUNCH ANALYSIS"
             binding.btnNewProject.setOnClickListener { startAnalysisFlow() }
-
-            // Auto-prepare player so user can see what they picked
             setupPlayer(binding.analyzePlayerView, uri)
+        }
+    }
+
+    private val analyticsPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            analyzeAnalyticsScreenshot(uri)
         }
     }
 
@@ -62,6 +66,7 @@ class MainActivity : AppCompatActivity() {
         setupTabs()
         setupClickListeners()
         setupNavigation()
+        setupScheduleGrid()
     }
 
     private fun setupClickListeners() {
@@ -69,23 +74,97 @@ class MainActivity : AppCompatActivity() {
             videoPickerLauncher.launch("video/*")
         }
 
+        // 🧹 MANUAL RESET BUTTON Logic
+        binding.btnResetManual.setOnClickListener {
+            resetProject()
+            Toast.makeText(this, "SYSTEM_CLEARED", Toast.LENGTH_SHORT).show()
+        }
+
         binding.btnOpenSettings.setOnClickListener {
             updateNerdWindow("NAV_EVENT: OPENING_VAULT")
             startActivity(Intent(this, SettingsActivity::class.java))
         }
 
-        // Swoosh trigger from Phase 5
         binding.btnSwoosh.setOnClickListener {
             updateNerdWindow("UPLOADING: TRANSMITTING_TO_YOUTUBE")
             Toast.makeText(this, "SWOOSH! TRANSMISSION_SUCCESSFUL 🚀", Toast.LENGTH_SHORT).show()
-            moveToStep(0) // Back to Dashboard
+            // Removed auto-reset from here to keep it manual per your request
         }
 
-        // Mute Toggle Logic (Make sure to add this ID to your XML)
         binding.btnMuteToggle?.setOnClickListener {
             isMuted = !isMuted
             player?.volume = if (isMuted) 0f else 1f
             binding.btnMuteToggle?.text = if (isMuted) "[ UNMUTE ]" else "[ MUTE ]"
+        }
+
+        binding.btnScanAnalytics.setOnClickListener {
+            updateNerdWindow("SYSTEM: STAGING_ANALYTICS_SCAN")
+            analyticsPickerLauncher.launch("image/*")
+        }
+    }
+
+    private fun resetProject() {
+        // 1. Kill the video ghost
+        player?.stop()
+        player?.clearMediaItems()
+
+        // 2. Clear the UI data
+        currentProject = null
+        binding.tvAnalyzePanel.text = "SCANNING..."
+        binding.btnNewProject.text = "[ + ] NEW PROJECT"
+
+        // 3. Clear the tabs
+        etTabCaption?.setText("")
+        etTabOverlay?.setText("")
+        etTabHashtags?.setText("")
+        etTabTags?.setText("")
+        etTabPrompt?.setText("")
+        tvMusicSuggestion?.text = ""
+
+        // 4. Back to Dashboard
+        moveToStep(0)
+        updateNerdWindow("SYSTEM_RESET: READY_FOR_NEW_INPUT")
+
+        // Re-enable original picker logic
+        binding.btnNewProject.setOnClickListener {
+            videoPickerLauncher.launch("video/*")
+        }
+    }
+
+    private fun setupScheduleGrid() {
+        val scheduleListener = View.OnClickListener { v ->
+            val time = (v as Button).text.toString()
+            updateNerdWindow("SCHEDULE_LOCKED: $time")
+
+            binding.btnSlot1.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#121212")))
+            binding.btnSlot2.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#121212")))
+            binding.btnSlot3.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#121212")))
+            binding.btnSlot4.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#121212")))
+
+            v.setBackgroundTintList(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00FF41")))
+            v.setTextColor(android.graphics.Color.BLACK)
+
+            binding.btnSwoosh.text = "CONFIRM_SCHEDULE: $time"
+        }
+
+        binding.btnSlot1.setOnClickListener(scheduleListener)
+        binding.btnSlot2.setOnClickListener(scheduleListener)
+        binding.btnSlot3.setOnClickListener(scheduleListener)
+        binding.btnSlot4.setOnClickListener(scheduleListener)
+    }
+
+    private fun analyzeAnalyticsScreenshot(uri: Uri) {
+        updateNerdWindow("PHASE_6: ANALYZING_AUDIENCE_GRAPH")
+        lifecycleScope.launch {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes() ?: return@launch
+            inputStream.close()
+
+            val bestTime = chewer.chewAnalytics(bytes)
+            if (bestTime != null) {
+                binding.tvBestTime.text = "Best time for your audience: $bestTime 🟢"
+                updateNerdWindow("NEURAL_STRATEGY: OPTIMAL_WINDOW_FOUND")
+            }
         }
     }
 
@@ -169,7 +248,7 @@ class MainActivity : AppCompatActivity() {
             val bytes = inputStream?.readBytes() ?: return@launch
             inputStream.close()
 
-            val result = chewer.chewWithRetry(bytes) { msg ->
+            val result = chewer.chewWithRetry(this@MainActivity, bytes) { msg ->
                 updateNerdWindow(msg)
             }
 
@@ -211,7 +290,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 🛑 CRITICAL LIFECYCLE FIXES: Stops audio when app is minimized or switches screens
     override fun onPause() {
         super.onPause()
         player?.pause()
@@ -219,7 +297,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Only resume if we are currently in a step that has a video visible
         if (binding.workflowFlipper.displayedChild in 2..4) {
             player?.play()
         }
