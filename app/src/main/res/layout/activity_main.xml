@@ -23,16 +23,33 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/navigationRail">
 
-        <androidx.cardview.widget.CardView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            app:cardBackgroundColor="#000000"
-            app:cardCornerRadius="4dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
-            <TextView android:id="@+id/tvNerdLog" android:layout_width="match_parent" android:layout_height="wrap_content"
-                android:padding="8dp" android:textColor="#00FF41" android:textSize="10sp" android:fontFamily="monospace"
-                android:text="[PHASE_1: NEURAL_INGEST_READY]" />
-        </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="0dp"
+                android:layout_height="55dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#000000"
+                app:cardCornerRadius="4dp">
+                <TextView android:id="@+id/tvNerdLog" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:padding="10dp" android:textColor="#00FF41" android:textSize="9sp" android:fontFamily="monospace"
+                    android:text="[NEURAL_ENGINE_READY]" />
+            </androidx.cardview.widget.CardView>
+
+            <ImageButton
+                android:id="@+id/btnOpenSettings"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@android:drawable/ic_menu_manage"
+                app:tint="#00FF41" />
+        </LinearLayout>
 
         <ViewFlipper
             android:id="@+id/workflowFlipper"
@@ -40,38 +57,41 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
-                <Button android:id="@+id/btnNewProject" android:layout_width="200dp" android:layout_height="200dp"
-                    android:text="[ + ]\nNEW PROJECT" android:backgroundTint="#0F0F0F" android:textColor="#00FF41" android:fontFamily="monospace" />
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="AWAITING SOURCE DATA" android:textColor="#333333" android:textSize="10sp" android:layout_marginTop="20dp" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+                <Button android:id="@+id/btnNewProject" android:layout_width="match_parent" android:layout_height="80dp"
+                    android:text="[ + ] NEW PROJECT" android:backgroundTint="#121212" android:textColor="#00FF41" android:fontFamily="monospace" />
+                <androidx.recyclerview.widget.RecyclerView android:id="@+id/rvRecentProjects" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginTop="12dp" />
             </LinearLayout>
 
-            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
-                <FrameLayout android:layout_width="match_parent" android:layout_height="250dp" android:background="#000000" android:layout_marginBottom="16dp">
-                    <androidx.media3.ui.PlayerView android:id="@+id/analyzePlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:use_controller="false" app:resize_mode="zoom" />
-                </FrameLayout>
-                <TextView android:id="@+id/tvAnalyzePanel" android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:background="#0F0F0F" android:padding="16dp" android:textColor="#00FF41" android:fontFamily="monospace" android:textSize="11sp"
-                    android:text="DETECTION_LOG:\n• Animal: Analyzing...\n• Emotion: Calculating...\n• Virality: --" />
-                <ProgressBar android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:layout_marginTop="20dp" android:indeterminateTint="#00FF41" />
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center" />
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+                <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="250dp" app:cardBackgroundColor="#000000">
+                    <androidx.media3.ui.PlayerView android:id="@+id/analyzePlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:use_controller="false" />
+                </androidx.cardview.widget.CardView>
+                <TextView android:id="@+id/tvAnalyzePanel" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="#00FF41" android:padding="12dp" android:fontFamily="monospace" android:text="SCANNING..." />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
                 <com.google.android.material.tabs.TabLayout android:id="@+id/generateTabs" android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:background="#050505" app:tabTextColor="#666666" app:tabSelectedTextColor="#00FF41" app:tabIndicatorColor="#00FF41" app:tabMode="scrollable" />
-                <FrameLayout android:id="@+id/generateContentFrame" android:layout_width="match_parent" android:layout_height="match_parent" android:background="#0F0F0F" />
+                    android:background="#050505" app:tabTextColor="#444444" app:tabSelectedTextColor="#00FF41" app:tabIndicatorColor="#00FF41" />
+                <FrameLayout android:id="@+id/generateContentFrame" android:layout_width="match_parent" android:layout_height="match_parent" />
             </LinearLayout>
 
             <ScrollView android:layout_width="match_parent" android:layout_height="match_parent">
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
-                    <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="350dp" app:cardBackgroundColor="#000000">
+                    <androidx.cardview.widget.CardView android:layout_width="match_parent" android:layout_height="300dp" app:cardBackgroundColor="#000000">
                         <androidx.media3.ui.PlayerView android:id="@+id/reviewPlayerView" android:layout_width="match_parent" android:layout_height="match_parent" app:use_controller="false" />
                     </androidx.cardview.widget.CardView>
                     <EditText android:id="@+id/etFinalCaption" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Final Caption" android:textColor="#FFFFFF" android:layout_marginTop="12dp" android:backgroundTint="#333333" />
                     <EditText android:id="@+id/etFinalTags" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Final Hashtags" android:textColor="#00FF41" android:layout_marginTop="8dp" android:backgroundTint="#333333" />
-                    <Button android:id="@+id/btnSwoosh" android:layout_width="match_parent" android:layout_height="60dp" android:text="SWOOSH TO CLOUD" android:layout_marginTop="20dp" android:backgroundTint="#00FF41" android:textColor="#000000" android:textStyle="bold" />
+                    <Button android:id="@+id/btnProceedToPublish" android:layout_width="match_parent" android:layout_height="60dp" android:text="GO TO PUBLISH →" android:layout_marginTop="20dp" android:backgroundTint="#1A1A1A" android:textColor="#00FF41" />
                 </LinearLayout>
             </ScrollView>
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_horizontal">
+                <Button android:id="@+id/btnSwoosh" android:layout_width="match_parent" android:layout_height="60dp" android:text="POST_NOW" android:backgroundTint="#00FF41" android:textColor="#000000" />
+            </LinearLayout>
 
         </ViewFlipper>
     </LinearLayout>

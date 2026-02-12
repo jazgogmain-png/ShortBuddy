@@ -3,10 +3,12 @@ package com.shor.tbuddy
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +19,15 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.google.android.material.tabs.TabLayout
 import com.shor.tbuddy.databinding.ActivityMainBinding
 import com.shor.tbuddy.models.ShortsProject
+import com.shor.tbuddy.ui.SettingsActivity
+import com.shor.tbuddy.ui.EngineRoomActivity
+import com.shor.tbuddy.ui.KeyVault
 import kotlinx.coroutines.launch
-import java.io.File
+import java.io.InputStream
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var chewer: GeminiChewer
     private var currentProject: ShortsProject? = null
     private var player: ExoPlayer? = null
 
@@ -31,6 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var etTabHashtags: EditText? = null
     private var etTabTags: EditText? = null
     private var etTabPrompt: EditText? = null
+    private var tvMusicSuggestion: TextView? = null
 
     private val videoPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -46,8 +53,45 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        chewer = GeminiChewer(KeyVault(this))
         setupTabs()
-        binding.btnNewProject.setOnClickListener { videoPickerLauncher.launch("video/*") }
+        setupClickListeners()
+        setupNavigation()
+    }
+
+    private fun setupClickListeners() {
+        binding.btnNewProject.setOnClickListener {
+            videoPickerLauncher.launch("video/*")
+        }
+
+        binding.btnOpenSettings.setOnClickListener {
+            updateNerdWindow("NAV_EVENT: OPENING_VAULT")
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        // Swoosh trigger from Phase 5
+        binding.btnSwoosh.setOnClickListener {
+            updateNerdWindow("UPLOADING: TRANSMITTING_TO_YOUTUBE")
+            Toast.makeText(this, "SWOOSH! TRANSMISSION_SUCCESSFUL 🚀", Toast.LENGTH_SHORT).show()
+            moveToStep(0) // Back to Dashboard
+        }
+    }
+
+    private fun setupNavigation() {
+        binding.navigationRail.setOnItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.lane_engine -> {
+                    updateNerdWindow("NAV_EVENT: ENTERING_ENGINE_ROOM")
+                    startActivity(Intent(this, EngineRoomActivity::class.java))
+                    true
+                }
+                R.id.lane_overview -> {
+                    moveToStep(0)
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     private fun setupTabs() {
@@ -59,18 +103,17 @@ class MainActivity : AppCompatActivity() {
         tabs.addTab(tabs.newTab().setText("Music"))
         tabs.addTab(tabs.newTab().setText("Prompt"))
 
-        // Inflate the separate tab layout into the frame
         val tabView = layoutInflater.inflate(R.layout.layout_generate_tabs, null)
         binding.generateContentFrame.addView(tabView)
 
         val tabFlipper = tabView.findViewById<android.widget.ViewFlipper>(R.id.tabFlipper)
 
-        // Connect UI elements from inflated layout
         etTabCaption = tabView.findViewById(R.id.etTabCaption)
         etTabOverlay = tabView.findViewById(R.id.etTabOverlay)
         etTabHashtags = tabView.findViewById(R.id.etTabHashtags)
         etTabTags = tabView.findViewById(R.id.etTabTags)
         etTabPrompt = tabView.findViewById(R.id.etTabPrompt)
+        tvMusicSuggestion = tabView.findViewById(R.id.tvMusicSuggestion)
 
         tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
@@ -80,7 +123,6 @@ class MainActivity : AppCompatActivity() {
             override fun onTabReselected(tab: TabLayout.Tab) {}
         })
 
-        // Copy Veo Prompt Logic
         tabView.findViewById<View>(R.id.btnCopyPrompt).setOnClickListener {
             val prompt = etTabPrompt?.text.toString()
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -88,28 +130,54 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "PROMPT_COPIED", Toast.LENGTH_SHORT).show()
         }
 
-        // Proceed to Phase 4
+        // Modified: Move to Review then to Publish
         tabView.findViewById<View>(R.id.btnNextToReview).setOnClickListener {
             syncToReviewScreen()
-            moveToStep(3)
+            moveToStep(4) // Move to REVIEW & EDIT
+        }
+
+        // Final bridge to Publish
+        binding.btnProceedToPublish.setOnClickListener {
+            moveToStep(5) // Move to PUBLISH SCREEN
+            updateNerdWindow("PHASE_5: READY_FOR_CLOUD_PUSH")
         }
     }
 
     private fun startAnalysisFlow() {
-        moveToStep(1) // ANALYZE SCREEN
+        val uri = currentProject?.rawVideoUri ?: return
+        moveToStep(2) // Move to ANALYZE SCREEN
         updateNerdWindow("PHASE_2: AI_ANALYSIS_ACTIVE")
-        setupPlayer(binding.analyzePlayerView, currentProject?.rawVideoUri!!)
+        setupPlayer(binding.analyzePlayerView, uri)
 
-        // Placeholder for G3 Analysis Trigger
-        // For now, let's pretend it finishes and moves to Phase 3 after a delay
-        binding.tvAnalyzePanel.postDelayed({
-            updateNerdWindow("PHASE_3: GENERATION_COMPLETE")
-            moveToStep(2) // GENERATE SCREEN
-        }, 2000)
+        lifecycleScope.launch {
+            val inputStream: InputStream? = contentResolver.openInputStream(uri)
+            val bytes = inputStream?.readBytes() ?: return@launch
+            inputStream.close()
+
+            val result = chewer.chewWithRetry(bytes) { msg ->
+                updateNerdWindow(msg)
+            }
+
+            if (result != null) {
+                binding.tvAnalyzePanel.text = "DETECTION_LOG:\n${result["detection"]}"
+
+                etTabCaption?.setText(result["caption"])
+                etTabOverlay?.setText(result["overlay"])
+                etTabHashtags?.setText(result["hashtags"])
+                etTabTags?.setText(result["seo"])
+                etTabPrompt?.setText(result["prompt"])
+                tvMusicSuggestion?.text = "🎵 Suggested: ${result["music"]}"
+
+                updateNerdWindow("PHASE_3: GENERATION_COMPLETE")
+                moveToStep(3) // Move to GENERATE SCREEN
+            } else {
+                updateNerdWindow("ERROR: NEURAL_STRIKE_FAILED")
+                moveToStep(0)
+            }
+        }
     }
 
     private fun syncToReviewScreen() {
-        // Carry over everything from the tabs to the final review screen
         binding.etFinalCaption.setText(etTabCaption?.text.toString())
         binding.etFinalTags.setText(etTabHashtags?.text.toString())
         setupPlayer(binding.reviewPlayerView, currentProject?.rawVideoUri!!)

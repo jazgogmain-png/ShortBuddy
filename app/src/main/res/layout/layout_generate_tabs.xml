@@ -36,7 +36,11 @@
         </LinearLayout>
 
         <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center">
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🎵 SUGGESTED: SOFT AMBIENT LOFI" android:textColor="#00FF41" android:fontFamily="monospace"/>
+            <TextView android:id="@+id/tvMusicSuggestion"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="🎵 SUGGESTED: SOFT AMBIENT LOFI"
+                android:textColor="#00FF41"
+                android:fontFamily="monospace"/>
             <Button android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="SEARCH TRENDING" android:layout_marginTop="12dp" android:backgroundTint="#1A1A1A" android:textColor="#FFFFFF"/>
         </LinearLayout>
 
