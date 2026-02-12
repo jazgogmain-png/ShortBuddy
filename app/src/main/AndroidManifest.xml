@@ -29,8 +29,20 @@
         </activity>
 
         <activity
-            android:name=".EngineRoomActivity"
+            android:name="com.shor.tbuddy.ui.SettingsActivity"
+            android:label="Settings"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.shor.tbuddy.ui.EngineRoomActivity"
             android:label="Engine Room"
+            android:exported="false"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.shor.tbuddy.ui.ChannelSettingsActivity"
+            android:label="Channel Settings"
             android:exported="false"
             android:screenOrientation="portrait" />
 

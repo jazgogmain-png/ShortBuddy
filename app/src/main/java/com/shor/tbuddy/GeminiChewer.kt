@@ -5,74 +5,85 @@ import com.google.ai.client.generativeai.type.*
 import com.shor.tbuddy.models.ShortsMetadata
 import com.shor.tbuddy.models.ChannelTemplate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import com.shor.tbuddy.ui.KeyVault
 
 class GeminiChewer(private val keyVault: KeyVault) {
 
-    suspend fun chewWithRetry(videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata? {
-        val currentKey = keyVault.getNextKey() ?: return null
+    suspend fun chewWithRetry(
+        videoBytes: ByteArray,
+        onUpdate: (String) -> Unit
+    ): Map<String, String>? {
+        var attempts = 0
+        val maxAttempts = 3
 
-        return try {
-            performChew(currentKey, videoBytes, template)
-        } catch (e: Exception) {
-            SlopLogger.error("CHEWER: Strike Failed: ${e.localizedMessage}")
-            null
+        while (attempts < maxAttempts) {
+            val currentKey = keyVault.getActiveKey() ?: return null
+
+            try {
+                return performChew(currentKey, videoBytes)
+            } catch (e: Exception) {
+                attempts++
+                val isTrafficJam = e.message?.contains("503") == true || e.message?.contains("high demand") == true
+
+                if (isTrafficJam && attempts < maxAttempts) {
+                    onUpdate("🛑 G3_TRAFFIC_JAM: Retrying in 2s...")
+                    delay(2000)
+                    keyVault.rotate()
+                } else {
+                    onUpdate("❌ ANALYSIS_FAILED: ${e.localizedMessage}")
+                    return null
+                }
+            }
         }
+        return null
     }
 
-    private suspend fun performChew(apiKey: String, videoBytes: ByteArray, template: ChannelTemplate): ShortsMetadata = withContext(Dispatchers.IO) {
-
+    private suspend fun performChew(apiKey: String, videoBytes: ByteArray): Map<String, String> = withContext(Dispatchers.IO) {
         val model = GenerativeModel(
-            modelName = "gemini-3-flash-preview", // Kept your specific model
+            modelName = "gemini-3-flash-preview",
             apiKey = apiKey,
-            requestOptions = RequestOptions(apiVersion = "v1beta") // Kept your v1beta requirement
+            requestOptions = RequestOptions(apiVersion = "v1beta")
         )
 
         val ninjaPrompt = """
-            You are the Master Creative Director for a Viral AI Animal Channel. 
-            Analyze the video and return ONLY these labels with no markdown, no asterisks, and no extra text:
+            Analyze this video for a viral animal channel. 
+            Return ONLY these labels with their data:
             
-            STYLE_MELT: [Emotional caption]
-            STYLE_ADOPT: [Adoption question]
-            STYLE_COZY: [Peaceful caption]
-            OVERLAY: [5 word max overlay text]
-            VEO_PROMPT: [Detailed 9:16 prompt]
-            VIRAL_TAGS: [tag1, tag2, tag3]
+            DETECTION: [Summarize animal, emotion, motion, lighting, and loop potential]
+            CAPTION: [Emoji-rich viral caption]
+            OVERLAY: [5-word max on-screen hook]
+            HASHTAGS: [#shorts plus 4 niche tags]
+            SEO_TAGS: [Comma separated SEO keywords]
+            MUSIC: [Recommended mood/genre]
+            VEO_PROMPT: [Ultra-detailed 9:16 generation prompt]
         """.trimIndent()
 
-        val response = model.generateContent(
-            content {
-                blob("video/mp4", videoBytes)
-                text(ninjaPrompt)
-            }
-        )
+        val response = model.generateContent(content {
+            blob("video/mp4", videoBytes)
+            text(ninjaPrompt)
+        })
 
-        val rawText = response.text ?: ""
-        parseNinjaMetadata(rawText)
+        parseNeuralOutput(response.text ?: "")
     }
 
-    private fun parseNinjaMetadata(rawText: String): ShortsMetadata {
-        // Clean up markdown before parsing (Removes ** and ##)
+    private fun parseNeuralOutput(rawText: String): Map<String, String> {
         val cleanText = rawText.replace("**", "").replace("##", "")
         val lines = cleanText.lines()
 
-        fun extract(key: String) = lines.find { it.contains(key, ignoreCase = true) }
+        fun extract(label: String) = lines
+            .find { it.startsWith(label, ignoreCase = true) }
             ?.substringAfter(":")?.trim() ?: ""
 
-        val title = extract("STYLE_MELT")
-        val adopt = extract("STYLE_ADOPT")
-        val cozy = extract("STYLE_COZY")
-        val overlay = extract("OVERLAY")
-        val veo = extract("VEO_PROMPT")
-        val tags = extract("VIRAL_TAGS").split(",").map { it.trim() }
-
-        // Stashing all styles in the description so MainActivity can split them later
-        val combinedDesc = "OVERLAY: $overlay | ADOPT: $adopt | COZY: $cozy | VEO: $veo"
-
-        return ShortsMetadata(
-            title = if (title.isEmpty()) "Cute Baby" else title,
-            description = combinedDesc,
-            tags = tags
+        return mapOf(
+            "detection" to extract("DETECTION"),
+            "caption" to extract("CAPTION"),
+            "overlay" to extract("OVERLAY"),
+            "hashtags" to extract("HASHTAGS"),
+            "seo" to extract("SEO_TAGS"),
+            "music" to extract("MUSIC"),
+            "prompt" to extract("VEO_PROMPT")
         )
     }
 }

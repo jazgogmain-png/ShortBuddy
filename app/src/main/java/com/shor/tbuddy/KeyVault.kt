@@ -1,64 +1,36 @@
-package com.shor.tbuddy
+package com.shor.tbuddy.ui
 
 import android.content.Context
 
-/**
- * Manages a rolling pool of API keys to avoid rate limits.
- * Professional version: Persists keys and handles the 'Key Rotation' logic.
- */
-class KeyVault(private val context: Context) {
-
-    // Unified preference file for the whole project
+class KeyVault(context: Context) {
     private val prefs = context.getSharedPreferences("ShortBuddyPrefs", Context.MODE_PRIVATE)
+    private var currentKeyIndex = 0
 
-    private var keyPool: List<String> = emptyList()
-
-    private var lastUsedIndex: Int
-        get() = prefs.getInt("last_key_index", -1)
-        set(value) = prefs.edit().putInt("last_key_index", value).apply()
-
-    init {
-        // Auto-load keys on initialization so the pool isn't 0 on start
-        updatePool()
-    }
-
-    /**
-     * Reads the raw keys from storage and refreshes the live pool.
-     */
-    fun updatePool() {
-        val rawKeys = prefs.getString("raw_key_pool", "") ?: ""
-        keyPool = rawKeys.lines()
+    // Gets all keys from the multi-line text field, one per line
+    private fun getKeys(): List<String> {
+        val rawKeys = prefs.getString("gemini_api_key", "") ?: ""
+        return rawKeys.split("\n")
             .map { it.trim() }
             .filter { it.isNotEmpty() }
-
-        SlopLogger.info("KEY_VAULT: Pool refreshed. Total keys: ${keyPool.size}")
     }
 
-    /**
-     * Overloaded version for direct updates from the Engine Room UI.
-     */
-    fun updatePool(rawKeys: String) {
-        keyPool = rawKeys.lines()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() }
-        SlopLogger.info("KEY_VAULT: Direct update. Total keys: ${keyPool.size}")
+    fun getActiveKey(): String? {
+        val keys = getKeys()
+        if (keys.isEmpty()) return null
+        // Safety wrap if the list size changed
+        if (currentKeyIndex >= keys.size) currentKeyIndex = 0
+        return keys[currentKeyIndex]
     }
 
-    /**
-     * Rotates to the next available key in the pool.
-     */
-    fun getNextKey(): String? {
-        if (keyPool.isEmpty()) {
-            // Last ditch attempt: try to reload from storage
-            updatePool()
-            if (keyPool.isEmpty()) return null
-        }
-
-        val nextIndex = (lastUsedIndex + 1) % keyPool.size
-        lastUsedIndex = nextIndex
-
-        return keyPool[nextIndex]
+    fun rotate(): Boolean {
+        val keys = getKeys()
+        if (keys.size <= 1) return false // Nowhere to rotate
+        currentKeyIndex = (currentKeyIndex + 1) % keys.size
+        return true
     }
 
-    fun getPoolSize(): Int = keyPool.size
+    fun getIndexInfo(): String {
+        val size = getKeys().size
+        return if (size > 0) "[KEY_${currentKeyIndex + 1}_OF_$size]" else "[NO_KEYS_LOADED]"
+    }
 }

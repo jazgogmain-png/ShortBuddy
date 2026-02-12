@@ -3,10 +3,10 @@ package com.shor.tbuddy
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -14,28 +14,30 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.google.android.material.tabs.TabLayout
 import com.shor.tbuddy.databinding.ActivityMainBinding
 import com.shor.tbuddy.models.ShortsProject
-import com.shor.tbuddy.models.ChannelTemplate
-import com.shor.tbuddy.ui.SettingsActivity
-import com.shor.tbuddy.ui.EngineRoomActivity
 import kotlinx.coroutines.launch
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var chewer: GeminiChewer
-    private lateinit var squeezer: VideoSqueezer
-
     private var currentProject: ShortsProject? = null
     private var player: ExoPlayer? = null
-    private var currentStyleIndex = 0 // 0: Melt, 1: Adopt, 2: Cozy
+
+    // Reference to inflated tab views
+    private var etTabCaption: EditText? = null
+    private var etTabOverlay: EditText? = null
+    private var etTabHashtags: EditText? = null
+    private var etTabTags: EditText? = null
+    private var etTabPrompt: EditText? = null
 
     private val videoPickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             currentProject = ShortsProject(rawVideoUri = uri)
-            moveToStep(1) // Step 2: Analyze
-            startProcessing()
+            updateNerdWindow("PHASE_1: SOURCE_STAGED")
+            binding.btnNewProject.text = "[ READY ]\nLAUNCH ANALYSIS"
+            binding.btnNewProject.setOnClickListener { startAnalysisFlow() }
         }
     }
 
@@ -44,123 +46,80 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        chewer = GeminiChewer(KeyVault(this))
-        squeezer = VideoSqueezer(this)
-
-        setupClickListeners()
-        setupNavigation()
-    }
-
-    private fun setupClickListeners() {
+        setupTabs()
         binding.btnNewProject.setOnClickListener { videoPickerLauncher.launch("video/*") }
+    }
 
-        // GEAR ICON: The Vault
-        binding.btnOpenSettings.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
-        }
+    private fun setupTabs() {
+        val tabs = binding.generateTabs
+        tabs.addTab(tabs.newTab().setText("Caption"))
+        tabs.addTab(tabs.newTab().setText("Overlay"))
+        tabs.addTab(tabs.newTab().setText("Hashtags"))
+        tabs.addTab(tabs.newTab().setText("Tags"))
+        tabs.addTab(tabs.newTab().setText("Music"))
+        tabs.addTab(tabs.newTab().setText("Prompt"))
 
-        // VEO CLIPBOARD: The Factory Loop
-        binding.btnCopyVeo.setOnClickListener {
-            val prompt = currentProject?.veoPrompt ?: return@setOnClickListener
+        // Inflate the separate tab layout into the frame
+        val tabView = layoutInflater.inflate(R.layout.layout_generate_tabs, null)
+        binding.generateContentFrame.addView(tabView)
+
+        val tabFlipper = tabView.findViewById<android.widget.ViewFlipper>(R.id.tabFlipper)
+
+        // Connect UI elements from inflated layout
+        etTabCaption = tabView.findViewById(R.id.etTabCaption)
+        etTabOverlay = tabView.findViewById(R.id.etTabOverlay)
+        etTabHashtags = tabView.findViewById(R.id.etTabHashtags)
+        etTabTags = tabView.findViewById(R.id.etTabTags)
+        etTabPrompt = tabView.findViewById(R.id.etTabPrompt)
+
+        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab) {
+                tabFlipper.displayedChild = tab.position
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab) {}
+            override fun onTabReselected(tab: TabLayout.Tab) {}
+        })
+
+        // Copy Veo Prompt Logic
+        tabView.findViewById<View>(R.id.btnCopyPrompt).setOnClickListener {
+            val prompt = etTabPrompt?.text.toString()
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            clipboard.setPrimaryClip(ClipData.newPlainText("Veo", prompt))
-            Toast.makeText(this, "Master Prompt Clipped! 🎥", Toast.LENGTH_SHORT).show()
+            clipboard.setPrimaryClip(ClipData.newPlainText("VeoPrompt", prompt))
+            Toast.makeText(this, "PROMPT_COPIED", Toast.LENGTH_SHORT).show()
+        }
+
+        // Proceed to Phase 4
+        tabView.findViewById<View>(R.id.btnNextToReview).setOnClickListener {
+            syncToReviewScreen()
+            moveToStep(3)
         }
     }
 
-    private fun setupNavigation() {
-        binding.navigationRail.setOnItemSelectedListener { item ->
-            when (item.itemId) {
-                R.id.lane_engine -> {
-                    startActivity(Intent(this, EngineRoomActivity::class.java))
-                    true
-                }
-                R.id.lane_overview -> {
-                    moveToStep(0)
-                    true
-                }
-                R.id.lane_cuteness -> {
-                    cycleViralStyles() // THE PAW ACTION
-                    true
-                }
-                else -> false
-            }
-        }
+    private fun startAnalysisFlow() {
+        moveToStep(1) // ANALYZE SCREEN
+        updateNerdWindow("PHASE_2: AI_ANALYSIS_ACTIVE")
+        setupPlayer(binding.analyzePlayerView, currentProject?.rawVideoUri!!)
+
+        // Placeholder for G3 Analysis Trigger
+        // For now, let's pretend it finishes and moves to Phase 3 after a delay
+        binding.tvAnalyzePanel.postDelayed({
+            updateNerdWindow("PHASE_3: GENERATION_COMPLETE")
+            moveToStep(2) // GENERATE SCREEN
+        }, 2000)
     }
 
-    private fun cycleViralStyles() {
-        val project = currentProject ?: return
-        if (binding.workflowFlipper.displayedChild != 2) return
-
-        currentStyleIndex = (currentStyleIndex + 1) % 3
-
-        val newCaption = when(currentStyleIndex) {
-            0 -> project.captionMelt
-            1 -> project.captionAdopt
-            else -> project.captionCozy
-        }
-
-        project.activeCaption = newCaption
-        binding.etTitle.setText(newCaption)
-        updateNerdWindow("STYLE: Switched to Lane ${currentStyleIndex + 1}")
+    private fun syncToReviewScreen() {
+        // Carry over everything from the tabs to the final review screen
+        binding.etFinalCaption.setText(etTabCaption?.text.toString())
+        binding.etFinalTags.setText(etTabHashtags?.text.toString())
+        setupPlayer(binding.reviewPlayerView, currentProject?.rawVideoUri!!)
+        updateNerdWindow("PHASE_4: REVIEW_SYNC_COMPLETE")
     }
 
-    private fun runG3Analysis(file: File) {
-        lifecycleScope.launch {
-            updateNerdWindow("CHEWER: Un-bundling Ninja Data...")
-            val template = ChannelTemplate("Lola", "Viral", "", listOf("cute"), "Global", "")
-            val result = chewer.chewWithRetry(file.readBytes(), template)
-
-            if (result != null) {
-                currentProject?.apply {
-                    // Extracting the clean data we formatted in GeminiChewer
-                    val data = result.description
-                    captionMelt = result.title
-                    captionAdopt = data.substringAfter("ADOPT: ").substringBefore(" | COZY:")
-                    captionCozy = data.substringAfter("COZY: ").substringBefore(" | VEO:")
-                    veoPrompt = data.substringAfter("VEO: ")
-
-                    activeCaption = captionMelt
-                    overlayText = data.substringAfter("OVERLAY: ").substringBefore(" | ADOPT:")
-                    hashtags = result.tags.joinToString(" ")
-                }
-                populateReviewScreen()
-                moveToStep(2) // Step 3: Review
-            }
-        }
-    }
-
-    private fun populateReviewScreen() {
-        val project = currentProject ?: return
-        runOnUiThread {
-            // No more clobbered text!
-            binding.tvViralOverlay.text = project.overlayText
-            binding.etTitle.setText(project.activeCaption)
-            binding.etHashtags.setText(project.hashtags)
-            setupExoPlayer(project.rawVideoUri!!)
-        }
-    }
-
-    private fun moveToStep(stepIndex: Int) {
-        runOnUiThread { binding.workflowFlipper.displayedChild = stepIndex }
-    }
-
-    private fun startProcessing() {
-        val uri = currentProject?.rawVideoUri ?: return
-        updateNerdWindow("SQUEEZER: Preparing slop for G3...")
-        squeezer.squeeze(uri,
-            onComplete = { file ->
-                currentProject = currentProject?.copy(squeezedFile = file)
-                runG3Analysis(file)
-            },
-            onError = { moveToStep(0) }
-        )
-    }
-
-    private fun setupExoPlayer(uri: Uri) {
+    private fun setupPlayer(view: androidx.media3.ui.PlayerView, uri: Uri) {
         player?.release()
         player = ExoPlayer.Builder(this).build().apply {
-            binding.playerView.player = this
+            view.player = this
             setMediaItem(MediaItem.fromUri(uri))
             repeatMode = Player.REPEAT_MODE_ALL
             prepare()
@@ -168,10 +127,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun moveToStep(index: Int) {
+        runOnUiThread { binding.workflowFlipper.displayedChild = index }
+    }
+
     private fun updateNerdWindow(msg: String) {
         runOnUiThread {
-            binding.tvNerdLog.append("\n> $msg")
-            binding.svNerdWindow.post { binding.svNerdWindow.fullScroll(View.FOCUS_DOWN) }
+            binding.tvNerdLog.text = "[$msg]"
         }
     }
 
