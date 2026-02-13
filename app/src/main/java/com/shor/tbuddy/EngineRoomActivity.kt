@@ -4,20 +4,25 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.shor.tbuddy.database.AppDatabase
 import com.shor.tbuddy.databinding.ActivityEngineRoomBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class EngineRoomActivity : AppCompatActivity() {
     private lateinit var binding: ActivityEngineRoomBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // This line only works if the XML is named activity_engine_room.xml
         binding = ActivityEngineRoomBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val prefs = getSharedPreferences("ShortBuddyPrefs", Context.MODE_PRIVATE)
 
         // 🧬 LOAD SAVED CORE DATA
+        // Automation level dictates how assertive the AI is in creative choices
         binding.sliderAutomation.value = prefs.getFloat("automation_level", 50f)
 
         binding.etMeltTemplate.setText(prefs.getString("template_melt",
@@ -45,6 +50,16 @@ class EngineRoomActivity : AppCompatActivity() {
 
             Toast.makeText(this, "CORE_SYNCHRONIZED 🦾", Toast.LENGTH_SHORT).show()
             finish()
+        }
+
+        // 💣 DATA PURGE (Safe call in case button isn't in XML yet)
+        binding.root.findViewWithTag<android.view.View>("nuke_btn")?.setOnClickListener {
+            lifecycleScope.launch(Dispatchers.IO) {
+                AppDatabase.getDatabase(this@EngineRoomActivity).projectDao().nukeBlackbox()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@EngineRoomActivity, "BLACKBOX_PURGED 💀", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }

@@ -6,9 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.shor.tbuddy.models.ProjectEntity
 
-@Database(entities = [ProjectEntity::class], version = 1, exportSchema = false)
+// 🛑 VERSION BUMP: Changed from 1 to 2 to handle new AI fields
+@Database(entities = [ProjectEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun projectDao(): ProjectDao
 
     companion object {
@@ -20,8 +20,11 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "shortbuddy_blackbox"
-                ).build()
+                    "blackbox_database"
+                )
+                    // 🌪️ THE CLEANER: Wipes old mismatched data to prevent the crash you saw
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }
