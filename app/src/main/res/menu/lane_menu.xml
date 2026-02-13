@@ -16,4 +16,9 @@
         android:icon="@drawable/ic_pets"
         android:title="Cuteness Lane" />
 
+    <item
+        android:id="@+id/lane_performance"
+        android:icon="@drawable/ic_dashboard"
+        android:title="Performance" />
+
 </menu>

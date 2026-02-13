@@ -7,10 +7,13 @@
 
     <com.google.android.material.navigationrail.NavigationRailView
         android:id="@+id/navigationRail"
-        android:layout_width="wrap_content"
+        android:layout_width="72dp"
         android:layout_height="match_parent"
         android:background="#0A0A0A"
         app:itemIconTint="#00FF41"
+        app:itemTextColor="#444444"
+        app:headerLayout="@layout/rail_header"
+        app:menuGravity="top"
         app:layout_constraintStart_toStartOf="parent"
         app:menu="@menu/lane_menu" />
 

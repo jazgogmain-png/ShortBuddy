@@ -2,8 +2,10 @@ package com.shor.tbuddy
 
 import android.content.Context
 import android.net.Uri
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.EditedMediaItem
 import androidx.media3.transformer.Transformer
@@ -12,11 +14,17 @@ import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import java.io.File
 
+/**
+ * Opt-in required for Media3 Transformer experimental APIs.
+ * Annotations must follow the package declaration.
+ */
+@OptIn(UnstableApi::class)
 class VideoSqueezer(private val context: Context) {
 
     fun squeeze(uri: Uri, onComplete: (File) -> Unit, onError: (Exception) -> Unit) {
         SlopLogger.info("SQUEEZER: Received URI: $uri. Preparing hardware crush...")
 
+        // Create a unique temporary file in the cache directory
         val outputFile = File(context.cacheDir, "squeezed_${System.currentTimeMillis()}.mp4")
 
         val transformer = Transformer.Builder(context)
@@ -37,7 +45,11 @@ class VideoSqueezer(private val context: Context) {
                     }
                 }
 
-                override fun onError(composition: Composition, exportResult: ExportResult, exportException: ExportException) {
+                override fun onError(
+                    composition: Composition,
+                    exportResult: ExportResult,
+                    exportException: ExportException
+                ) {
                     SlopLogger.error("SQUEEZER: Transformation Error", exportException)
                     onError(exportException)
                 }
@@ -45,6 +57,7 @@ class VideoSqueezer(private val context: Context) {
             .build()
 
         val mediaItem = MediaItem.fromUri(uri)
+        // Optimization: Removing audio significantly reduces payload size for Gemini
         val editedMediaItem = EditedMediaItem.Builder(mediaItem).setRemoveAudio(true).build()
 
         try {
